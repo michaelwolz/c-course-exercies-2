@@ -1,2 +1,5 @@
 bin
 .DS_Store
+beispiel.txt
+dblp-sm.xml
+text.c
