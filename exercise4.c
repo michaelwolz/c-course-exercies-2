@@ -28,9 +28,75 @@ struct lNode {
 	struct node 	*tree;
 } *magazineList;
 
-void sortTree(struct node **root) {
-	
+struct sortNode {
+	struct node *data;
+	struct sortNode *prev, *next;	
+};
+
+
+/*
+	LIST Management
+*/
+
+void sortedInsert(struct sortNode **list, struct node *data) {
+	struct sortNode *l = *list;
+	struct sortNode *n;
+	n = (struct sortNode *) malloc(sizeof(struct sortNode));
+	n->data = data;
+	n->next = NULL;
+	n->prev = NULL;
+
+	if (list == NULL || data == NULL) 
+		return;
+
+	if (*list == NULL) {	
+		*list = n;
+		return;
+	} else if (l->data->count < data->count) {
+		n->next = l;
+		l->prev = n;
+		*list = n;
+		return;
+	} else {	
+		while (l->data->count >= data->count && l->next != NULL) {
+			l = l->next;
+		}	
+		if (l->next == NULL) {
+			l->next = n;
+			n->prev = l;
+		} else {	
+			n->prev = l->prev;
+			n->next = l;
+			l->prev = n;
+			n->prev->next = n;
+		}
+	}
+}	
+
+void itterateList(struct sortNode *list, int limit) {
+	struct sortNode *n = list;
+	int counter = 0; 
+	while (n && counter < limit) {
+		printf("%d %s\n", n->data->count, n->data->w);
+		n = n->next;
+		counter++;
+	}
 }
+	
+void freeList(struct sortNode* start) {
+   struct sortNode* tmp;
+
+   while (start != NULL)
+    {
+       tmp = start;
+       start = start->next;
+       free(tmp);
+    }
+}
+
+/* 
+	BINARY TREE 
+*/
 
 void incr(struct node **root, char *w) {
 	if (root == NULL || w == NULL) {
@@ -66,8 +132,7 @@ void incr(struct node **root, char *w) {
 		incr(&((*root)->l),w);
 }
 
-void words(struct node **root, char *s)
-{
+void words(struct node **root, char *s) {
 	int state = 0;
 	char c;
 	char *start;
@@ -91,11 +156,6 @@ void words(struct node **root, char *s)
 	}
 }
 
-void update(struct lNode *n, char *title) {
-	words(&(n->tree), title);
-	n->count++;
-}
-
 void insert(char *mName, char *title) {
 	struct lNode *n;
 	struct node *tr = NULL;
@@ -112,6 +172,11 @@ void insert(char *mName, char *title) {
 	n->next = magazineList;	
 	words(&n->tree, title);	
 	magazineList = n;
+}
+
+void update(struct lNode *n, char *title) {
+	words(&(n->tree), title);
+	n->count++;
 }
 
 void insertOrUpdate(char *mName, char *title) {
@@ -132,26 +197,33 @@ void insertOrUpdate(char *mName, char *title) {
 	}
 }
 
-void traverse(struct node *r) {
+void traverse(struct node *r, struct sortNode **list) {
 	if (r == NULL) 
 		return;
 	
-	traverse(r->l);
-	if (r->count > 15) 
-		printf("%d %s\n", r->count, r->w);
-	traverse(r->r);
+	traverse(r->l, list);
+	sortedInsert(list, r);
+	traverse(r->r, list);
 }
 
-void out_list(struct lNode *n) {
+void printList(struct lNode *n, int limit) {
+	struct sortNode *sortedList;
 	while (n) {
 		if (n->count >= 500) {
+			sortedList = NULL;
+			traverse(n->tree, &(sortedList));
 			printf("############################\nMagazine: %s\nPublished Articles: %d\n############################\n\n", n->mName, n->count);
-			traverse(n->tree);
-			printf("\n############################\n\n");
+			itterateList(sortedList, limit);
+			printf("\n\n############################\n\n");
+			freeList(sortedList);	
 		}
 		n = n->next;
 	}
 }
+
+/*
+	PROCESS FILE 
+*/
 
 char * getMagazineName(char *s) {	
 	s = strstr(s, "key=\"journals/");
@@ -178,8 +250,7 @@ char * getTitle(char *s) {
 	return start;
 }
 
-void process_file(char *s)
-{
+void process_file(char *s) {
 	int state = 0;
 	char c;
 	char *start;
@@ -219,8 +290,7 @@ void process_file(char *s)
  *
  ************************************************************************/
 
-char *read_file(char *file_name)
-{
+char *read_file(char *file_name) {
 	FILE	*stream;
   	struct stat stat_buf;
   	char	*file_start;
@@ -279,8 +349,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	process_file(f);
-	out_list(magazineList);
-	//traverse(tree);
-
+	printList(magazineList, 30);
 	exit(EXIT_SUCCESS);
 }
