@@ -215,7 +215,7 @@ void freeList(struct sortNode* start) {
     }
 }
 
-//Magazin-Item in ersellen und in die Magazin-Liste einsortieren
+//Magazin-Item ersellen und in die Magazin-Liste einsortieren
 void insert(char *mName, char *title) {
 	struct lNode *n;
 	struct node *tr = NULL;
