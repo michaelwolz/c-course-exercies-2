@@ -377,6 +377,8 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	printf("\nEinlesen der Datei %s\n", argv[1]);
+	printf("Bitte warten... \n\n");
 	process_file(f); //Start
 	printList(magazineList, 30); //Ergebnisausgabe
 
